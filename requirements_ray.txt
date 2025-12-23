@@ -1,0 +1,5 @@
+# Axolotl (with DeepSpeed support, no forced flash-attn build)
+axolotl[vllm,deepspeed]
+
+wandb==0.22.0
+ray[train]

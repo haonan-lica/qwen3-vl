@@ -1,0 +1,120 @@
+base_model: Qwen/Qwen3-VL-30B-A3B-Instruct
+plugins:
+  - axolotl.integrations.cut_cross_entropy.CutCrossEntropyPlugin
+strict: false
+
+processor_type: AutoProcessor
+
+ddp_find_unused_parameters: true
+
+chat_template: tokenizer_default
+
+# Data configuration
+datasets:
+  - path: /mnt/haonan-us-1b/data/data0_train/training_data_optimized_image.jsonl
+    type: chat_template
+    split: train
+    field_messages: messages
+
+dataset_prepared_path: last_run_prepared
+
+# dataloader_pin_memory: true
+dataloader_persistent_workers: false #true would need it for full run
+dataloader_num_workers: 0 # 4  # would need it for full run
+
+# Model configuration
+sequence_len: 6144  # was 2048
+eval_max_new_tokens: 6144
+# pad_to_sequence_len: true
+sample_packing: false
+
+# these 3 lines are needed for now to handle vision chat templates w images
+skip_prepare_dataset: false
+remove_unused_columns: true
+
+
+eval_steps: 
+# eval_table_size: 32
+
+
+# resume_from_checkpoint: 
+auto_resume_from_checkpoints: false #true will turn on after training 
+
+# LoRA configuration
+load_in_4bit: true
+adapter: qlora
+lora_r: 8
+lora_alpha: 16
+lora_dropout: 0.05
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - down_proj
+  - up_proj
+lora_mlp_kernel: true
+lora_qkv_kernel: true
+lora_o_kernel: true
+
+
+# Training configuration
+wandb_project: 
+wandb_entity:
+wandb_watch:
+wandb_name: 
+wandb_log_model:
+
+
+# optimizer setup 
+gradient_accumulation_steps: 2 # was 8 in elad's set up 
+micro_batch_size: 2
+eval_batch_size: 2
+auto_find_batch_size: false  # was true
+num_epochs: -1
+max_steps: 500000
+optimizer: adamw_torch_4bit
+gradient_accumulation_steps: 2
+lr_scheduler: cosine
+learning_rate: 0.0002
+
+
+bf16: true
+fp16:
+tf32: true
+
+gradient_checkpointing: true 
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+logging_steps: 1
+flash_attention: true
+eager_attention:
+
+# deepspeed: deepspeed_configs/zero3.json
+
+warmup_ratio: 0.03
+weight_decay: 0.0
+save_steps: 10
+special_tokens:
+
+# Output configuration
+output_dir: /mnt/haonan-us-1b/projects/qwen3-vl/output/qwen3-vl-30b-multi-node
+
+# Ray configuration
+use_ray: true
+ray_num_workers: 4
+resources_per_worker:
+  GPU: 1
+trust_remote_code: true
+# ray_config:
+#   run_config:
+#     failure_config:
+#       # The job will be restarted up to 3 times on failure.
+#       # After the 4th failure, the job will be marked as FAILED.
+#       max_failures: 3
+#   runtime_env:
+#     working_dir: .
+#     env_vars:
+#       HF_TOKEN: 
+#       HF_HUB_ENABLE_HF_KERNELS_TRUST_REMOTE_CODE: "1"
+#       RAY_TRAIN_WORKER_GROUP_START_TIMEOUT_S: "120"

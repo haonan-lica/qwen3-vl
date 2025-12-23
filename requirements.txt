@@ -1,0 +1,14 @@
+# Additional utilities
+wandb
+tensorboard
+scipy
+scikit-learn
+sentencepiece
+protobuf
+Pillow
+tqdm
+colorama
+pyyaml
+
+# Note: Core packages (torch, axolotl) are installed separately in setup.sh
+# with specific versions and build flags
