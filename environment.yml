@@ -1,0 +1,78 @@
+# Conda environment file for reproducing ray_vl_new environment
+# This is a minimal specification - conda/pip will resolve all dependencies
+#
+# Usage:
+#   conda env create -f environment.yml
+#   conda activate ray_vl_new_reproduced
+#
+# Note: The setup.sh script is the recommended method as it includes
+# additional configuration steps and provides better control over the
+# installation process.
+
+name: ray_vl_new_reproduced
+channels:
+  - defaults
+
+dependencies:
+  - python=3.12.12
+  - pip
+
+  - pip:
+      # Build tools
+      - packaging==23.2
+      - setuptools==70.2.0
+      - wheel==0.45.1
+      - ninja==1.13.0
+
+      # PyTorch with CUDA 13.0 support
+      - torch==2.9.1
+      - torchvision==0.24.1
+      - torchaudio==2.9.1
+      - --extra-index-url https://download.pytorch.org/whl/cu130
+
+      # Core ML/Training packages
+      - accelerate==1.11.0
+      - datasets==4.4.1
+      - evaluate==0.4.1
+      - peft==0.18.0
+      - optimum==1.16.2
+      - trl==0.25.0
+      - bitsandbytes==0.48.2
+      - liger-kernel==0.6.3
+
+      # Model and tokenization
+      - transformers==4.57.1
+      - tokenizers==0.22.1
+      - sentencepiece==0.2.1
+      - tiktoken==0.12.0
+
+      # Attention and optimization
+      - flash-attn==2.8.3
+      - xformers==0.0.33.post2
+      - einops==0.8.1
+
+      # Distributed training
+      - deepspeed==0.18.2
+      - ray[train]
+
+      # Utilities and monitoring
+      - wandb==0.23.1
+      - tensorboard==2.20.0
+      - huggingface-hub==0.36.0
+      - safetensors==0.7.0
+
+      # Scientific computing
+      - scipy==1.16.3
+      - scikit-learn==1.4.2
+      - numpy==2.3.5
+      - pandas==2.3.3
+
+      # General utilities
+      - protobuf==6.33.2
+      - Pillow==11.1.0
+      - tqdm==4.67.1
+      - colorama==0.4.6
+      - pyyaml==6.0.3
+
+      # Axolotl (installed from git)
+      - git+https://github.com/axolotl-ai-cloud/axolotl.git@v0.13.0

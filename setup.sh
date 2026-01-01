@@ -1,15 +1,31 @@
 #!/bin/bash
 
+# Setup script to reproduce the ray_vl_new environment
+# This script creates a conda environment matching the ray_vl_new configuration
+# with all required packages for Qwen3-VL MoE training
+
 echo "🛠️  SETTING UP QWEN3-VL MOE TRAINING ENVIRONMENT WITH CUDA 13.0"
 
-# Create new conda environment with Python 3.12
-echo "Creating ray_vl_new conda environment with Python 3.12..."
-conda create -n ray_vl_new python=3.12 -y
+# Parse command line arguments
+ENV_NAME="${1:-ray_vl_new}"
+
+# Check if environment already exists
+if conda env list | grep -q "^${ENV_NAME} "; then
+    echo "❌ Environment '${ENV_NAME}' already exists!"
+    echo "   To create a new environment, either:"
+    echo "   1. Remove the existing one: conda env remove -n ${ENV_NAME}"
+    echo "   2. Use a different name: ./setup.sh my_new_env_name"
+    exit 1
+fi
+
+# Create new conda environment with Python 3.12.12 (matching ray_vl_new)
+echo "Creating ${ENV_NAME} conda environment with Python 3.12..."
+conda create -n ${ENV_NAME} python=3.12.12 -y
 
 # Activate the new environment
-echo "Activating ray_vl_new environment..."
+echo "Activating ${ENV_NAME} environment..."
 eval "$(conda shell.bash hook)"
-conda activate ray_vl_new
+conda activate ${ENV_NAME}
 
 # Install required build tools first
 echo "Installing build dependencies..."
@@ -24,19 +40,23 @@ pip3 install torch torchvision torchaudio --index-url https://download.pytorch.o
 echo "Installing additional dependencies..."
 pip3 install -r requirements.txt
 
+# Install Flash Attention (v2.8.3 - must be installed before Axolotl)
+echo "Installing Flash Attention 2.8.3..."
+pip3 install 'flash-attn==2.8.3' --no-build-isolation
+
 # Install Axolotl v0.13.0 from GitHub (WITHOUT [deepspeed] extra to avoid PyTorch downgrade)
 # This includes transformers 4.57.1+ which has Qwen3-VL MoE support
 echo "Installing Axolotl v0.13.0 from GitHub (includes Qwen3-VL MoE support)..."
 echo "Note: This may take several minutes and will install many dependencies..."
-pip3 install 'git+https://github.com/axolotl-ai-cloud/axolotl.git@v0.13.0' flash-attn --no-build-isolation
+pip3 install 'git+https://github.com/axolotl-ai-cloud/axolotl.git@v0.13.0'
 
-# Install DeepSpeed separately (axolotl[deepspeed] would downgrade PyTorch to 2.8.0)
+# Install DeepSpeed 0.18.2 separately (axolotl[deepspeed] would downgrade PyTorch to 2.8.0)
 echo "Installing DeepSpeed 0.18.2 for distributed training..."
 pip3 install 'deepspeed==0.18.2'
 
-# Upgrade xformers to be compatible with PyTorch 2.9
-echo "Upgrading xformers for PyTorch 2.9 compatibility..."
-pip3 install --upgrade xformers
+# Install xformers v0.0.33.post2 to be compatible with PyTorch 2.9
+echo "Installing xformers 0.0.33.post2 for PyTorch 2.9 compatibility..."
+pip3 install 'xformers==0.0.33.post2'
 
 # Fix missing telemetry whitelist.yaml file (known issue in v0.13.0)
 echo "Fixing missing telemetry whitelist.yaml..."
@@ -52,20 +72,23 @@ pip3 install 'ray[train]'
 
 echo ""
 echo "✅ Setup complete! Activate the environment with:"
-echo "   conda activate ray_vl_new"
+echo "   conda activate ${ENV_NAME}"
 echo ""
-echo "Installed versions:"
-echo "  - Python: 3.12"
+echo "Expected package versions (matching ray_vl_new):"
+echo "  - Python: 3.12.12"
 echo "  - PyTorch: 2.9.1+cu130"
 echo "  - CUDA: 13.0 (matching system CUDA)"
 echo "  - Transformers: 4.57.1"
 echo "  - Axolotl: 0.13.0.dev0"
 echo "  - DeepSpeed: 0.18.2"
-echo "  - Flash Attention: 2.8.3+"
-echo "  - xformers: 0.0.33+"
-echo "  - Ray: 2.52.1+"
+echo "  - Flash Attention: 2.8.3"
+echo "  - xformers: 0.0.33.post2"
+echo "  - wandb: 0.23.1"
+echo "  - accelerate: 1.11.0"
+echo "  - peft: 0.18.0"
 echo ""
 echo "To verify installation, run:"
+echo "   conda activate ${ENV_NAME}"
 echo "   python -c 'import torch; print(f\"PyTorch: {torch.__version__}\"); print(f\"CUDA: {torch.version.cuda}\"); print(f\"CUDA available: {torch.cuda.is_available()}\")'"
 echo ""
 echo "To verify Qwen3-VL MoE support, run:"
